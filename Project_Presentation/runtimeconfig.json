@@ -1,0 +1,7 @@
+{
+  "runtimeOptions": {
+    "configProperties": {
+      "System.Runtime.GC.AllowVeryLargeObjects": true
+    }
+  }
+}

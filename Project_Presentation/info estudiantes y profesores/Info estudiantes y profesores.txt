@@ -1,0 +1,118 @@
+﻿namespace Project_Presentation
+{
+    public partial class FormInfoGeneral : Form
+    {
+        private FormMainMenu ? oMainMenu = null ;
+        private FormStudent ? oFormStudent = null ;
+        private FormMessage? oFormMessage = null ;
+        private Panel? oPanelContainer = null ;
+        private readonly UserSession ? oUserSession = null  ;
+        public FormInfoGeneral(FormMainMenu oMainMenu, FormStudent oFormStudent ,UserSession oUserSession,Panel oPanelContainer)
+        {
+  
+            InitializeComponent();
+            this.oPanelContainer = oPanelContainer ;
+            this.oUserSession = oUserSession ;
+            oFormMessage = new(oMainMenu,this,oPanelContainer);
+            this.oMainMenu = oMainMenu;
+            this.oFormStudent = oFormStudent;
+            this.oPanelContainer = oPanelContainer ;
+            LinklabelCloseForm.LinkClicked += LinklabelCloseFormLinkCliked;
+            ButtonAssignCourse.Click += ButtonAssignCourseClick ;
+            LoadInfoMember();
+            DataGridViewTeacher.SelectionChanged += DataGridViewTeacherSelectionChange ;
+            DataGridViewStudent.SelectionChanged += DataGridViewStudentSelectionChange;
+        }
+     
+        private void LinklabelCloseFormLinkCliked(object oSender, LinkLabelLinkClickedEventArgs oEvent)
+        {
+            this.Parent.Controls.Remove(this);
+            if (oMainMenu is not null)
+            {
+                oMainMenu.ShowPanelOptionAdmin();
+            }          
+        }
+
+        private void LoadInfoMember()
+        {
+            if (oUserSession != null && oUserSession.RolUser == Rols.RolAdministrator && !string.IsNullOrEmpty(oUserSession.User))
+            {
+                (bool IsMember ,string result) = ModelUser.SelectInfoMember(oUserSession.User);
+                if (IsMember && !string.IsNullOrEmpty(result))
+                {
+                    DataGridViewStudent.DataSource = ModelUser.SelectInfoStudents(result);
+                    DataGridViewTeacher.DataSource = ModelUser.SelectInfoTeachers(result);
+                }
+                else MessageError("No se encontro el nombre del administrador");
+            }       
+            else MessageError("No se ingreso el usuario");
+        }
+
+        public async void MessageError(string message)
+        {
+            LabelMessage.Text = message;
+            LabelMessage.Visible = true;
+            await Task.Delay(5000);
+            LabelMessage.Visible = false;
+        }
+
+        private void ButtonAssignCourseClick(object ? oSender , EventArgs oEvent)
+        {
+            
+            if ( oFormMessage is not null && oPanelContainer is not null)
+            {
+                oFormMessage.TopLevel = false ;
+                this.oPanelContainer.Controls.Add(oFormMessage);
+
+                foreach (DataGridViewRow oRow in DataGridViewTeacher.Rows)
+                {
+                    if (oRow.Selected)
+                    {                 
+                        this.Parent.Controls.Remove(this);
+                        oFormMessage.oUser = oRow.Cells[0].Value.ToString();
+                        oFormMessage.oCode = oRow.Cells[1].Value.ToString();
+                        oFormMessage.oFullName = oRow.Cells[2].Value.ToString();
+                        oFormMessage.oTypeUser = oRow.Cells[3].Value.ToString();
+                        oFormMessage.Show();
+                        break ;
+                    }
+                    else MessageError("Debe Seleccionar una fila");                 
+                }
+
+                foreach (DataGridViewRow oRow in DataGridViewStudent.Rows)
+                {
+                    if (oRow.Selected)
+                    {                      
+                        this.Parent.Controls.Remove(this);
+                        oFormMessage.oUser = oRow.Cells[0].Value.ToString();
+                        oFormMessage.oCode = oRow.Cells[1].Value.ToString();
+                        oFormMessage.oFullName = oRow.Cells[2].Value.ToString();
+                        oFormMessage.oTypeUser = oRow.Cells[3].Value.ToString();
+                        oFormMessage.Show();
+                        break;
+                    }
+                    else MessageError("Debe Seleccionar una fila");
+                   
+                }
+            }
+          
+        }
+
+        private void DataGridViewTeacherSelectionChange(object ? oSender , EventArgs oEvent)
+        {
+            if (DataGridViewTeacher.SelectedRows.Count > 0)
+                DataGridViewStudent.Enabled = false;
+            else
+                DataGridViewStudent.Enabled = true;
+        }
+
+        private void DataGridViewStudentSelectionChange(object? oSender, EventArgs oEvent)
+        {
+       
+            if (DataGridViewStudent.SelectedRows.Count > 0)
+                DataGridViewTeacher.Enabled = false;
+            else
+                DataGridViewTeacher.Enabled = true;
+        }
+    }
+}

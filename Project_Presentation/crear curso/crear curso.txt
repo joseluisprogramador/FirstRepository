@@ -1,0 +1,378 @@
+﻿
+namespace Project_Presentation.Students
+{
+    public partial class FormStudent : Form
+    {
+        private List<string> ButtonsSave = new();
+        private List<string> oFormState = new();
+        private string ? SelectedCourse = "";
+        private Button? oButton;
+        private FormInfoStudent? oFormInfoStudent = null;
+        private FormMainMenu? oFormMainMenu = null;
+        private int? IdUser;
+        private UserSession ? oUserSession = null;
+        public FormStudent(FormMainMenu oFormMainMenu, UserSession oUserSession)
+        {
+            InitializeComponent();
+            this.oUserSession = oUserSession;
+            oFormInfoStudent = new(oFormMainMenu);
+            ButtonDeleteCourse.Enabled = false;
+            ButtonUpdateCourse.Enabled = false;
+            ButtonAddCourse.Click += ButtonAddCourseClick;
+            ButtonUpdateCourse.Click += ButtonUpdateCourseClick;
+            ButtonDeleteCourse.Click += ButtonDeleteCourseClick;
+            this.Load += ButtonStudentLoad;
+            this.Paint += TextBoxPaint;
+            CheckBoxDeleteCourse.CheckedChanged += CheckBoxDeleteCourseCheckedChange;
+            CheckBoxUpdateCourse.CheckedChanged += CheckBoxUpdateCourseCheckedChange ;
+            LinkLabelClose.LinkClicked += LinkLabelCloseClick;
+            this.oFormMainMenu = oFormMainMenu;
+            ImageButton();
+            if (this.oUserSession != null && this.oUserSession.RolUser == Rols.RolTeacher)
+            {
+                this.IdUser = oUserSession.IdUser;
+            }
+        }
+
+        private void ImageButton()
+        {
+            string ImagePathSave = @"C:\Users\Jose\Downloads\Img\ButtonSave.png";
+            string ImagePathUpdate = @"C:\Users\Jose\Downloads\Img\ButtonUpdate.png";
+            string ImagePathDelete = @"C:\Users\Jose\Downloads\Img\ButtonDelete.png";
+
+            Image SaveImage = Image.FromFile(ImagePathSave);
+            Image UpdateImage = Image.FromFile(ImagePathUpdate);
+            Image DeleteImage = Image.FromFile(ImagePathDelete);
+
+            ButtonAddCourse.Image = ResizeImageProportionally(SaveImage, ButtonAddCourse.Width, ButtonAddCourse.Height);
+            ButtonUpdateCourse.Image = ResizeImageProportionally(UpdateImage, ButtonUpdateCourse.Width, ButtonUpdateCourse.Height);
+            ButtonDeleteCourse.Image = ResizeImageProportionally(DeleteImage, ButtonDeleteCourse.Width, ButtonDeleteCourse.Height);
+
+        }
+
+        private Image ResizeImageProportionally(Image img, int maxWidth, int maxHeight)
+        {
+            // Obtener el tamaño original de la imagen
+            int originalWidth = img.Width + 10;
+            int originalHeight = img.Height + 10;
+
+            // Calcular la relación de aspecto
+            float ratioX = (float)maxWidth / (float)originalWidth;
+            float ratioY = (float)maxHeight / (float)originalHeight;
+            float ratio = Math.Min(ratioX, ratioY);
+
+            // Calcular las nuevas dimensiones manteniendo la proporción
+            int newWidth = (int)(originalWidth * ratio);
+            int newHeight = (int)(originalHeight * ratio);
+
+            // Redimensionar la imagen
+            Bitmap resizedImage = new Bitmap(img, new Size(newWidth, newHeight));
+            return resizedImage;
+        }
+
+        private void TextBoxPaint(object? oSender, PaintEventArgs oEvent)
+        {
+            Pen oPen = new(Color.PaleVioletRed, 3);
+            foreach (Control oControl in this.Controls)
+            {
+                if (oControl is TextBox oTextBox)
+                {
+                    int x1 = oTextBox.Left;
+                    int x2 = oTextBox.Right;
+                    int y = oTextBox.Bottom + 2;
+                    oEvent.Graphics.DrawLine(oPen, x1, y, x2, y);
+                }
+            }
+            oPen.Dispose();
+
+        }
+
+        private void ButtonStudentLoad(object? oSender, EventArgs oEvent)
+        {
+            RestoreButtonInfoStudent();
+            RestoreFormInfoStudent(oFormInfoStudent);
+        }
+        private void RestoreButtonInfoStudent()
+        {
+            string Userfile = $"ButtonsSave{IdUser}.txt";
+            if (File.Exists(Userfile))
+            {
+                ButtonsSave = File.ReadAllLines(Userfile).ToList();
+                foreach (string NameCourse in ButtonsSave)
+                {
+                    CreateButton(NameCourse);
+                }
+            }
+        }
+        private void RestoreFormInfoStudent(FormInfoStudent ? oFormInfoStudent)
+        {
+            string UserFile = $"FormsSave{IdUser}.txt";
+
+            if (File.Exists(UserFile))
+            {
+                var savedState = File.ReadAllLines(UserFile).ToList();
+
+                // Restore course name
+                if (savedState.Count > 0 && oFormInfoStudent != null)
+                {
+                    string savedCourse = savedState[0];
+                    foreach (Control oControl in oFormInfoStudent.Controls)
+                    {
+                        if (oControl is Label oLabel && oLabel.Name == "LabelInfoCourse")
+                        {
+                            oLabel.Text = savedState[1]; // Restore saved label text
+                        }
+                        else if (oControl is Button oButton)
+                        {
+                            if (oButton.Image != null)
+                            {
+                                string ? savedButtonImage = savedState.Find(s => s.StartsWith("ButtonImage"));
+                                if (!string.IsNullOrEmpty(savedButtonImage))
+                                {
+                                    string imagePath = savedButtonImage.Replace("ButtonImage", "");
+                                    oButton.Image = Image.FromFile(imagePath);
+                                }
+                            }
+                        }
+                        else if (oControl is DataGridView oGridView)
+                        {
+                            // Assuming the DataGridView rows start from index 2 in savedState
+                            int rowIndex = 2;
+                            foreach (string row in savedState.Skip(2))
+                            {
+                                if (oGridView.Rows.Count > rowIndex)
+                                {
+                                    var cellValues = row.Split(',');
+                                    for (int cellIndex = 0; cellIndex < cellValues.Length; cellIndex++)
+                                    {
+                                        oGridView.Rows[rowIndex].Cells[cellIndex].Value = cellValues[cellIndex];
+                                    }
+                                }
+                                rowIndex++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        private void CourseButtonSelect(object? oSender, EventArgs oEvent)
+        {
+            Button? SelectedButton = oSender as Button;
+            if (SelectedButton is not null)
+            {
+                SelectedCourse = SelectedButton.Text;
+            }
+        }
+        private void CreateButton(string NameCourse)
+        {
+            oButton = new Button();
+            oButton.Text = NameCourse;
+            oButton.Size = new Size(160, 50);
+            oButton.FlatStyle = FlatStyle.Flat;
+            oButton.FlatAppearance.BorderSize = 0;
+            oButton.FlatAppearance.MouseDownBackColor = Color.PaleVioletRed;
+            oButton.FlatAppearance.MouseOverBackColor = Color.Pink;
+            oButton.ForeColor = Color.MediumSlateBlue;
+            oButton.BackColor = Color.Snow ;
+            InfoStudent(oButton);
+            FlowLayoutPanelCourse.Controls.Add(oButton);
+        }
+
+        private void CreateForm(FormInfoStudent ? oFormInfoStudent)
+        {
+            oFormState = new();
+            string UserFile = $"FormsSave{IdUser}.txt";
+            if (!string.IsNullOrEmpty(SelectedCourse) && oFormInfoStudent != null)
+            {
+                oFormState.Add(SelectedCourse);
+                foreach (Control oControl in oFormInfoStudent.Controls)
+                {
+                    if (oControl is Label oLabel && oLabel.Name == "LabelInfoCourse")
+                    {
+                        oLabel.Text = "Informacion de los estudiante de " + SelectedCourse ;
+                        oFormState.Add(oLabel.Text);
+                    }
+                    else if (oControl is Button oButton)
+                    {
+                        if (oButton.Image != null)
+                        {
+                            string ? ImageFilePath = oButton.Image.Tag?.ToString();
+                            if (!string.IsNullOrEmpty(ImageFilePath))
+                            {
+                                oFormState.Add($"ButtonImage{ImageFilePath}");
+                            }
+                        }
+                    }
+                    else if (oControl is DataGridView oGridView)
+                    {
+                        foreach (DataGridViewRow oGridViewRow in oGridView.Rows)
+                        {
+                            var oCellsData = string.Join(",", oGridViewRow.Cells.Cast<DataGridViewCell>().Select(c => c.Value?.ToString()));
+                            oFormState.Add(oCellsData);
+                        }
+                    }
+                }
+
+                SelectedCourse = null ;
+                File.AppendAllLines(UserFile, oFormState);
+            }
+        }
+        private void InfoStudent(Button oButton)
+        {
+            oButton.Click += (oItem, oEvent) =>
+            {
+                CourseButtonSelect(oItem, oEvent);
+                if (oUserSession.User != null && oUserSession.RolUser == Rols.RolTeacher && oFormInfoStudent != null)
+                {
+
+                    if (!ButtonDeleteCourse.Enabled && !ButtonUpdateCourse.Enabled)
+                    {
+                        CreateForm(oFormInfoStudent);                      
+                        oFormInfoStudent.FormClosing += FormInfoStudentFormClosing;
+                        oFormInfoStudent.ShowDialog();
+                    }
+                }      
+            };
+        }    
+
+        private void ButtonAddCourseClick(object? oSender, EventArgs oEvent)
+        {
+            string NameCourse = TextBoxNameCourse.Text;
+            if (!string.IsNullOrWhiteSpace(NameCourse))
+            {
+                CreateButton(NameCourse);
+                ButtonsSave.Add(NameCourse);
+                string Userfile = $"ButtonsSave{IdUser}.txt";
+                File.WriteAllLines(Userfile, ButtonsSave);
+                TextBoxNameCourse.Clear();
+            }
+        }
+
+        private void ButtonUpdateCourseClick(object? oSender, EventArgs oEvent)
+        {
+            if (!string.IsNullOrEmpty(SelectedCourse))
+            {
+                string NewCourseName = TextBoxNameCourse.Text;
+
+                // Asegúrate de que el nuevo nombre del curso no esté vacío
+                if (!string.IsNullOrWhiteSpace(NewCourseName))
+                {
+                    // Encuentra el botón que coincide con el curso seleccionado
+                    oButton = FlowLayoutPanelCourse.Controls.OfType<Button>().FirstOrDefault(oButton => oButton.Text == SelectedCourse);
+
+                    if (oButton is not null)
+                    {
+                        // Actualiza el texto del botón
+                        oButton.Text = NewCourseName;
+
+                        // Actualiza la lista de cursos guardados
+                        int index = ButtonsSave.IndexOf(SelectedCourse);
+                        if (index != -1)
+                        {
+                            ButtonsSave[index] = NewCourseName;
+                        }
+
+                        // Vuelve a guardar la lista en el archivo
+                        string Userfile = $"ButtonsSave{IdUser}.txt";
+                        File.WriteAllLines(Userfile, ButtonsSave);
+
+                        // Limpia el campo de texto
+                        TextBoxNameCourse.Clear();
+
+                        // Deselecciona el curso anterior
+                        SelectedCourse = null;
+                    }
+                }
+            }
+        }
+        private void ButtonDeleteCourseClick(object? oSender, EventArgs oEvent)
+        {
+
+            if (!string.IsNullOrEmpty(SelectedCourse))
+            {
+                oButton = new Button();
+                oButton = FlowLayoutPanelCourse.Controls.OfType<Button>().FirstOrDefault((oButton) => oButton.Text == SelectedCourse);
+                if (oButton is not null)
+                {
+                    FlowLayoutPanelCourse.Controls.Remove(oButton);
+                    ButtonsSave.Remove(SelectedCourse);
+                    string Userfile = $"ButtonsSave{IdUser}.txt";
+                    File.WriteAllLines(Userfile, ButtonsSave);
+                }
+                SelectedCourse = null;
+            }
+
+        }
+
+        private void CheckBoxDeleteCourseCheckedChange(object? oSender, EventArgs oEvent)
+        {
+            if (CheckBoxDeleteCourse.Checked is true)
+            {
+                CheckBoxUpdateCourse.Enabled = false ;
+                TextBoxNameCourse.Enabled = false;
+                ButtonAddCourse.Enabled = false;
+                ButtonUpdateCourse.Enabled = false ;
+                ButtonDeleteCourse.Enabled = true;
+            }
+            else
+            {
+                CheckBoxUpdateCourse.Enabled = true ;
+                TextBoxNameCourse.Enabled = true;
+                ButtonAddCourse.Enabled = true;
+                ButtonUpdateCourse.Enabled = false;
+                ButtonDeleteCourse.Enabled = false;
+            }
+        }
+
+        private void CheckBoxUpdateCourseCheckedChange(object? oSender, EventArgs oEvent)
+        {
+            if (CheckBoxUpdateCourse.Checked is true)
+            {
+                CheckBoxDeleteCourse.Enabled = false ;
+                ButtonAddCourse.Enabled = false ;
+                ButtonUpdateCourse.Enabled = true ;
+                ButtonDeleteCourse.Enabled = false ;
+            }
+            else
+            {
+                CheckBoxDeleteCourse.Enabled = true ;
+                ButtonAddCourse.Enabled = true ;
+                ButtonUpdateCourse.Enabled = false ;
+                ButtonDeleteCourse.Enabled = false ;
+            }
+        }
+
+        private void FormInfoStudentFormClosing(object? oSender, FormClosingEventArgs oEvent)
+        {
+            oEvent.Cancel = false;
+        }
+
+        private void LinkLabelCloseClick(object? oSender, LinkLabelLinkClickedEventArgs oEvent)
+        {
+            this.Parent.Controls.Remove(this);
+            if (oFormMainMenu is not null)
+            {
+                oFormMainMenu.ShowPanelImage();
+            }
+        }
+    }
+}
+
+
+/*
+   // Selección del último botón agregado (o puedes personalizar esto para un botón específico)
+            if (FlowLayoutPanelCourse.Controls.Count > 0)
+            {
+                // Eliminar el último botón (o según el criterio deseado)
+                Button? LastButton = FlowLayoutPanelCourse.Controls[FlowLayoutPanelCourse.Controls.Count - 1] as Button;
+                if (LastButton != null)
+                {
+                    // Eliminarlo del FlowLayoutPanel
+                    FlowLayoutPanelCourse.Controls.Remove(LastButton);
+                    // Eliminarlo de la lista de guardados
+                    ButtonsSave.Remove(LastButton.Text);
+                    // Actualizar el archivo de botones guardados
+                    File.WriteAllLines("ButtonsSave.txt", ButtonsSave);
+                }
+            }
+ */

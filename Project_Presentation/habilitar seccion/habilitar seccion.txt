@@ -1,0 +1,120 @@
+﻿namespace Project_Presentation
+{
+    public partial class FormMessage : Form
+    {
+        private FormMainMenu? oMainMenu = null;
+        private FormInfoGeneral? oFormInfoGeneral = null;
+        private Panel? oPanelContainer = null;
+        private UserSession ? oUserSession = null  ;
+
+        public FormMessage(FormMainMenu oMainMenu, FormInfoGeneral oFormInfoGeneral, Panel oPanelContainer, UserSession? oUserSession = null)
+        {
+            InitializeComponent();
+            this.oMainMenu = oMainMenu;
+            this.oFormInfoGeneral = oFormInfoGeneral;
+            this.oPanelContainer = oPanelContainer;
+            this.oUserSession = oUserSession;
+            LinklabelCerrar.LinkClicked += LinklabelCloseFormLinkCliked;
+            CheckBoxEnable.CheckedChanged += CheckBoxEnableCheckedChange;
+            CheckBoxDisable.CheckedChanged += CheckBoxDisableCheckedChange;
+ 
+        }
+
+        public string? oCode
+        {
+            get { return LabelCode.Text; }
+            set { LabelCode.Text = value; }
+        }
+        public string? oFullName
+        {
+            get { return LabelFullName.Text; }
+            set { LabelFullName.Text = value; }
+        }
+        public string? oUser
+        {
+            get { return LabelUser.Text; }
+            set { LabelUser.Text = value; }
+        }
+
+        public string ? oTypeUser { get; set; }
+        private void LinklabelCloseFormLinkCliked(object oSender, LinkLabelLinkClickedEventArgs oEvent)
+        {
+            this.Parent.Controls.Remove(this);
+            if (oPanelContainer is not null && oFormInfoGeneral is not null)
+            {
+                oFormInfoGeneral.TopLevel = false;
+                oPanelContainer.Controls.Add(oFormInfoGeneral);
+                oFormInfoGeneral.MessageError("");
+                oFormInfoGeneral.Show();
+            }
+
+        }     
+
+        private void SaveEnableSeccionTeacher(bool IsEnable)
+        {
+            if (string.IsNullOrEmpty(oUser)) return ;
+            string FilePath = $"EnabledButtonTeacher{oUser}.txt";
+            using StreamWriter oWrite = new(FilePath);
+            oWrite.WriteLine(IsEnable);
+        }
+
+        private void SaveEnableSeccionStudent(bool IsEnable)
+        {
+            if (string.IsNullOrEmpty(oUser)) return;
+            string FilePath = $"EnabledButtonStudent{oUser}.txt";
+            using StreamWriter oWrite = new(FilePath);
+            oWrite.WriteLine(IsEnable);
+
+        }
+
+        private void CheckBoxEnableCheckedChange(object? oSender, EventArgs oEvent)
+        {
+            if (CheckBoxEnable.Checked)
+            {             
+                ButtonEnable.Text = "Habilitar";
+                ButtonEnable.Click += ButtonEnableClick;
+                CheckBoxDisable.Enabled = false;
+                CheckBoxDisable.Checked = false;
+            }
+            else CheckBoxDisable.Enabled = true;
+        }
+        private void CheckBoxDisableCheckedChange(object? oSender, EventArgs oEvent)
+        {
+            if (CheckBoxDisable.Checked)
+            {
+                ButtonEnable.Text = "Deshabilitar";
+                ButtonEnable.Click += ButtonDisableClick;
+                CheckBoxEnable.Enabled = false;
+                CheckBoxEnable.Checked = false;
+            }
+            else CheckBoxEnable.Enabled = true;
+        }
+        private void ButtonEnableClick(object? oSender, EventArgs oEvent)
+        {           
+            if(oTypeUser == Rols.RolTeacher)
+                SaveEnableSeccionTeacher(true);
+                MessageConfirmation($"Se ha habilitado la seccion (Profesor) del usuario : {oUser}");
+            if (oTypeUser == Rols.RolStudent)
+                SaveEnableSeccionStudent(true);
+                MessageConfirmation($"Se ha habilitado la seccion (Estudiante) del usuario : {oUser}");
+        }
+        private void ButtonDisableClick(object? oSender, EventArgs oEvent)
+        {
+            if (oTypeUser == Rols.RolTeacher)
+                SaveEnableSeccionTeacher(false);
+                MessageConfirmation($"Se ha desabilitado la seccion (Profesor) del usuario : {oUser}");
+            if (oTypeUser == Rols.RolStudent) ;
+                SaveEnableSeccionStudent(false);
+                MessageConfirmation($"Se ha desabilitado la seccion (Estudiante) del usuario : {oUser}");
+        }
+
+        private async void MessageConfirmation(string message)
+        {
+            LabelConfirmation.Text = message;
+            LabelConfirmation.Visible = true;
+            await Task.Delay(5000);
+            LabelConfirmation.Visible = false;
+        }
+       
+    }
+}

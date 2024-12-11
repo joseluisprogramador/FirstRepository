@@ -1,0 +1,72 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'" />
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'" />
+
+  <ItemGroup>
+    <Compile Remove="actualizar informacion\**" />
+    <Compile Remove="crear curso\**" />
+    <Compile Remove="habilitar seccion\**" />
+    <Compile Remove="info estudiantes y profesores\**" />
+    <EmbeddedResource Remove="actualizar informacion\**" />
+    <EmbeddedResource Remove="crear curso\**" />
+    <EmbeddedResource Remove="habilitar seccion\**" />
+    <EmbeddedResource Remove="info estudiantes y profesores\**" />
+    <None Remove="actualizar informacion\**" />
+    <None Remove="crear curso\**" />
+    <None Remove="habilitar seccion\**" />
+    <None Remove="info estudiantes y profesores\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="FormInfoGeneral.cs" />
+    <Compile Remove="FormInfoGeneral.Designer.cs" />
+    <Compile Remove="FormInfoStudent.cs" />
+    <Compile Remove="FormInfoStudent.Designer.cs" />
+    <Compile Remove="FormMessage.cs" />
+    <Compile Remove="FormMessage.Designer.cs" />
+    <Compile Remove="FormStudent.cs" />
+    <Compile Remove="FormStudent.Designer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="FormInfoGeneral.resx" />
+    <EmbeddedResource Remove="FormInfoStudent.resx" />
+    <EmbeddedResource Remove="FormMessage.resx" />
+    <EmbeddedResource Remove="FormStudent.resx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.13.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Project_Common\Project_Common.csproj" />
+    <ProjectReference Include="..\Project_Domain\Project_Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

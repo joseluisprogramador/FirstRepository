@@ -1,0 +1,105 @@
+﻿namespace Project_Presentation
+{
+    public partial class FormInfoStudent : Form
+    {
+
+        private UserSession? oUserSession = null;
+        private FormMainMenu? oMainMenu = null;
+        public FormInfoStudent(FormMainMenu oMainMenu, UserSession? oUserSession = null)
+        {
+            InitializeComponent();
+            this.oMainMenu = oMainMenu;
+            this.oUserSession = oUserSession;
+            LinkLabelClose.LinkClicked += LinklabelCloseFormLinkCliked;
+            ImageButton();
+            AlterForm(this.oUserSession);
+            this.PanelUpdateInfo.Paint += TextBoxPaint ;
+             
+        }
+
+        private void ImageButton()
+        {
+            string ImagePathSave = @"C:\Users\Jose\Downloads\Img\ButtonUpdate.png";
+
+            Image SaveImage = Image.FromFile(ImagePathSave);
+            ButtonEdit.Image = ResizeImageProportionally(SaveImage, ButtonEdit.Width, ButtonEdit.Height);
+        }
+        private Image ResizeImageProportionally(Image img, int maxWidth, int maxHeight)
+        {
+            // Obtener el tamaño original de la imagen
+            int originalWidth = img.Width + 10;
+            int originalHeight = img.Height + 10;
+
+            // Calcular la relación de aspecto
+            float ratioX = (float)maxWidth / (float)originalWidth;
+            float ratioY = (float)maxHeight / (float)originalHeight;
+            float ratio = Math.Min(ratioX, ratioY);
+
+            // Calcular las nuevas dimensiones manteniendo la proporción
+            int newWidth = (int)(originalWidth * ratio);
+            int newHeight = (int)(originalHeight * ratio);
+
+            // Redimensionar la imagen
+            Bitmap resizedImage = new Bitmap(img, new Size(newWidth, newHeight));
+            return resizedImage;
+        }
+
+        private void TextBoxPaint(object? oSender, PaintEventArgs oEvent)
+        {
+            Pen oPen = new(Color.PaleVioletRed, 3);
+            foreach (var oItem in PanelUpdateInfo.Controls)
+            {
+                if (oItem is TextBox oTextBox)
+                {
+                    int x1 = oTextBox.Left;
+                    int x2 = oTextBox.Right;
+                    int y = oTextBox.Bottom + 2;
+                    oEvent.Graphics.DrawLine(oPen, x1, y, x2, y);
+                }
+                else if (oItem is ComboBox oComboBox)
+                {
+                    int x1 = oComboBox.Left;
+                    int x2 = oComboBox.Right;
+                    int y = oComboBox.Bottom + 2;
+                    oEvent.Graphics.DrawLine(oPen, x1, y, x2, y);
+                }
+            }
+           
+            oPen.Dispose();
+        }
+        private void PictureBoxClickClose(object? oSender, EventArgs oEvent)
+        {
+            this.Close();
+        }
+        private void PictureBoxClickMinimize(object? oSender, EventArgs oEvent)
+        {
+            this.WindowState = FormWindowState.Minimized;
+        }
+
+        private void LinklabelCloseFormLinkCliked(object oSender, LinkLabelLinkClickedEventArgs oEvent)
+        {
+            this.Parent.Controls.Remove(this);
+            if (oMainMenu is not null)
+            {
+                oMainMenu.ShowPanelOptionAdmin();
+            }
+        }
+
+        private void AlterForm(UserSession? oUserSession)
+        {
+            if (oUserSession == null) return;
+            if (oUserSession.RolUser == Rols.RolTeacher)
+            {
+                if (this.Size == new Size(495, 641) && this.PanelUpdateInfo.Size == new Size(426, 463))
+                {
+                    this.Size = new Size(495, 475);
+                    PanelUpdateInfo.Size = new Size(426, 289);
+                    Label1Message.Location = new Point(234, 365);
+                    ButtonEdit.Location = new Point(193, 391);
+                    LinkLabelClose.Location = new Point(173, 446);                           
+                }
+            }
+
+        }
+    }
+}
